@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Boarding House Management System
 
-## Getting Started
+Simple, Vercel-ready Next.js app for managing boarding house listings with:
 
-First, run the development server:
+- Admin role (username `admin`, password `admin`) that can create, update, and delete listings.
+- Residents authenticated via Google who can only view data (read-only dashboard).
+- MySQL persistence using the `mysql2` driver (no Prisma).
+- Tailwind CSS UI with role-aware dashboards.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 1. Environment variables
+
+Copy `env.example` to `.env` (or configure in Vercel) and set the following:
+
+```
+DATABASE_URL="mysql://USER:PASSWORD@HOST:3306/boarding_house"
+NEXTAUTH_SECRET="generate-a-random-string"
+GOOGLE_CLIENT_ID="your-google-oauth-client-id"
+GOOGLE_CLIENT_SECRET="your-google-oauth-client-secret"
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="admin"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> The Google credentials are required so the OAuth button can promote users into the `user` role automatically.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. MySQL schema
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a database (e.g., `boarding_house`) and the `listings` table:
 
-## Learn More
+```sql
+CREATE TABLE listings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  location VARCHAR(120) NOT NULL,
+  price INT NOT NULL,
+  rooms INT NOT NULL,
+  status ENUM('available', 'occupied') NOT NULL DEFAULT 'available',
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 3. Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Visit `http://localhost:3000` — the home page includes the admin credential form plus Google login for residents. Admin users see CRUD tools, while residents see a read-only list.
 
-## Deploy on Vercel
+## 4. Deployment (Vercel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push the repo to GitHub/GitLab.
+2. Create a new Vercel project.
+3. Add the environment variables from step 1 in the Vercel dashboard.
+4. Ensure your MySQL instance is reachable from Vercel (Neon PlanetScale, RDS, etc.).
+5. Deploy — the production build needs no extra configuration.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech stack
+
+- Next.js App Router + React Server Components where possible
+- NextAuth (credentials + Google OAuth, JWT sessions)
+- Tailwind CSS
+- MySQL via `mysql2/promise`
