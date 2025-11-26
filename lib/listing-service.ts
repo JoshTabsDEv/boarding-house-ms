@@ -72,3 +72,4 @@ export async function deleteListing(id: number) {
   await execute("DELETE FROM listings WHERE id = ?", [id]);
 }
 
+
